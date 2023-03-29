@@ -1,0 +1,37 @@
+from matplotlib import pyplot as plt
+import numpy as np
+import pandas as pd
+
+df = pd.read_csv('data/LGBT_Survey_TransgenderSpecificQuestions.csv')
+
+q9 = df['question_code'] == 'tr9'
+df_q9 = df[q9]
+
+drop_av = df_q9["CountryCode"] != 'Average'
+df_q9 = df_q9[drop_av]
+
+df_q9.drop(['subset', 'notes', 'question_code', 'question_label'],
+           axis = 1, inplace = True)
+
+no_empty = df_q9['percentage'] != ":"
+df_q9 = df_q9[no_empty]
+
+df_q9.loc[:,'percentage'] = pd.to_numeric(df_q9.loc[:,'percentage'] )
+
+df_q9 = pd.pivot(df_q9, values = 'percentage', index = 'CountryCode', columns = 'answer')
+
+df_q9['Yes'] = df_q9['Yes'] * -1
+
+df_q9['Diff'] = df_q9['No'] + df_q9['Yes']
+
+df_q9.sort_values(by = 'Diff', inplace = True)
+
+yes_color = "#D95085"
+no_color = "#BBBDF6"
+
+plt.rcParams.update({'font.size': 14})
+plt.figure(figsize = (10,20))
+
+plt.barh(df_q9.index, df_q9['Yes'], height = height, color = yes_color)
+plt.barh(df_q9.index, df_q9['No'], height = height, color = no_color)
+plt.axvline(0, color = 'black')
